@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINEDU - Sistema de Rutas de Transporte Escolar</title>
+    
+    <!-- Leaflet CSS para mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 0;
+            height: calc(100vh - 200px);
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 25px;
+            overflow-y: auto;
+            border-right: 2px solid #e0e0e0;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .file-upload {
+            border: 2px dashed #667eea;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            background: #f0f4ff;
+            border-color: #1e3c72;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        #map {
+            height: 100%;
+            background: #e9ecef;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .route-info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #2a5298;
+        }
+
+        .route-info h4 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .route-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .data-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .regime-selector {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .regime-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .regime-btn.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚌 Sistema de Rutas de Transporte Escolar</h1>
+            <p>MINEDU - Modelamiento de Transporte Terrestre y Fluvial</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <!-- Sección de Régimen -->
+                <div class="section">
+                    <h3>📚 Régimen Educativo</h3>
+                    <div class="regime-selector">
+                        <button class="regime-btn active" data-regime="sierra">Sierra</button>
+                        <button class="regime-btn" data-regime="costa">Costa</button>
+                        <button class="regime-btn" data-regime="selva">Selva</button>
+                    </div>
+                </div>
+
+                <!-- Sección de carga de datos -->
+                <div class="section">
+                    <h3>📂 Cargar Base de Datos</h3>
+                    <div class="file-upload" id="fileUploadArea">
+                        <p style="margin-bottom: 10px;">📊 Arrastra aquí tu archivo Excel</p>
+                        <p style="font-size: 0.9em; color: #666;">o haz clic para seleccionar</p>
+                        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div id="fileInfo" class="data-preview" style="display: none;"></div>
+                </div>
+
+                <!-- Sección de selección de rutas -->
+                <div class="section">
+                    <h3>🗺️ Configurar Ruta</h3>
+                    <label for="unidadEje">Unidad EJE (Origen):</label>
+                    <select id="unidadEje" class="select-field">
+                        <option value="">Seleccionar unidad EJE...</option>
+                    </select>
+
+                    <label for="unidadAbsorbida">Unidad Absorbida (Destino):</label>
+                    <select id="unidadAbsorbida" class="select-field">
+                        <option value="">Seleccionar unidad absorbida...</option>
+                    </select>
+
+                    <label for="transportType">Tipo de Transporte:</label>
+                    <select id="transportType" class="select-field">
+                        <option value="car">🚗 Terrestre (Carretera)</option>
+                        <option value="foot">🚶 A pie</option>
+                        <option value="boat">⛵ Fluvial</option>
+                    </select>
+
+                    <button class="btn" id="calculateRoute" disabled>Calcular Ruta</button>
+                </div>
+
+                <!-- Sección de resultados -->
+                <div class="section" id="resultsSection" style="display: none;">
+                    <h3>📊 Resultados</h3>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="label">Distancia</div>
+                            <div class="value" id="distanceValue">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Tiempo</div>
+                            <div class="value" id="timeValue">-</div>
+                        </div>
+                    </div>
+                    <div class="route-info" id="routeDetails"></div>
+                    <button class="btn" id="exportRoute">Exportar Ruta</button>
+                </div>
+
+                <!-- Loading -->
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Calculando ruta...</p>
+                </div>
+            </div>
+
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

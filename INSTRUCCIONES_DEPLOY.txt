@@ -1,0 +1,32 @@
+INSTRUCCIONES DE DESPLIEGUE — FRONTEND (GitHub Pages) + BACKEND (Render o Fly.io)
+
+1) Backend
+   a) Sube este repo a GitHub (público o privado).
+   b) Render:
+      - Crea cuenta en https://render.com
+      - "New → Web Service" y selecciona tu repo.
+      - Render leerá render.yaml automáticamente.
+      - Al finalizar tendrás una URL: https://transporte-escolar-api.onrender.com
+   c) Fly.io (alternativo):
+      - Instala CLI: curl -L https://fly.io/install.sh | sh
+      - fly auth signup
+      - fly launch (acepta defaults o ajusta el nombre del app en fly.toml)
+      - fly deploy
+      - URL: https://<tu-app>.fly.dev
+
+2) Frontend (GitHub Pages)
+   a) Copia templates/index.html a la raíz de un repo público llamado, por ejemplo:
+      Transporte-escolar-MINEDEC_COSTA
+   b) Edita index.html y define:
+      <script>window.API_BASE = 'https://TU-BACKEND.onrender.com';</script>
+   c) Settings → Pages → Build and deployment → Source: "Deploy from a branch"
+      Branch: main | Folder: /(root)
+   d) Abre: https://<tu-usuario>.github.io/Transporte-escolar-MINEDEC_COSTA/
+
+3) Pruebas
+   - Backend: https://.../api/health  → {"status":"ok"}
+   - Frontend: carga un CSV con columnas: longitud_a, latitud_a, longitud_b, latitud_b
+
+4) Notas
+   - GitHub Pages no ejecuta Flask; por eso el API va en Render/Fly.io.
+   - Si usas dominio propio en Pages, mantén CORS abierto o restringe a tu dominio.

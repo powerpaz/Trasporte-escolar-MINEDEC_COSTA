@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistema de Rutas de Transporte Escolar</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    :root { --green:#1DB954; --light:#f8fafc; --border:#0a0a0a; }
+    body { margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; background:var(--light); }
+    header { background:#fff; border-bottom:2px solid var(--green); padding:16px 20px; position:sticky; top:0; }
+    .wrap { max-width:1200px; margin:0 auto; padding:16px 20px 28px; }
+    .grid { display:grid; grid-template-columns:330px 1fr; gap:16px; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px; }
+    .btn { border:1px solid var(--green); background:var(--green); color:#fff; border-radius:10px; padding:10px 14px; font-weight:600; cursor:pointer; }
+    .btn.outline { background:transparent; color:#111; }
+    .status { background:#f1f5f9; border:1px dashed #cbd5e1; border-radius:12px; padding:10px 12px; font-size:13px; max-height:160px; overflow:auto; white-space:pre-wrap; }
+    #map { width:100%; height:560px; border:2px solid var(--border); border-radius:14px; overflow:hidden; }
+    .kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+    .kpi { border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px; background:#fff; }
+    .kpi .label { font-size:12px; color:#64748b; }
+    .kpi .value { font-size:18px; font-weight:700; }
+    .dropzone { border:2px dashed #94a3b8; border-radius:12px; padding:18px; text-align:center; background:#f8fafc; }
+    input[type="number"] { width:120px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><h1>🚍 Transporte Escolar — Frontend</h1></div></header>
+  <div class="wrap">
+    <div class="grid">
+      <aside class="card">
+        <h3>1) Cargar CSV</h3>
+        <div class="dropzone">
+          <label class="btn outline" for="csv">Selecciona archivo</label>
+          <input id="csv" type="file" accept=".csv" style="display:none" />
+          <p style="font-size:12px;color:#334155;margin-top:6px">
+            Requeridas: <code>longitud_a, latitud_a, longitud_b, latitud_b</code>
+          </p>
+        </div>
+        <div style="height:10px"></div>
+        <button id="uploadBtn" class="btn">Subir CSV</button>
+
+        <h3 style="margin-top:18px">2) Calcular rutas</h3>
+        <label for="limit" style="font-size:12px;color:#334155">Límite (opcional):</label>
+        <input id="limit" type="number" min="1" placeholder="ej. 200">
+        <button id="calcBtn" class="btn">Calcular</button>
+
+        <h3 style="margin-top:18px">Estado</h3>
+        <div id="status" class="status">Listo.</div>
+      </aside>
+
+      <section class="card">
+        <div id="map"></div>
+        <div class="kpis">
+          <div class="kpi"><div class="label">Rutas</div><div class="value" id="kpiRoutes">0</div></div>
+          <div class="kpi"><div class="label">Total km</div><div class="value" id="kpiKm">0</div></div>
+          <div class="kpi"><div class="label">Capas</div><div class="value" id="kpiLayers">0</div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>window.API_BASE = window.API_BASE || ''; const API_BASE = window.API_BASE;</script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const statusEl = document.getElementById('status');
+    const fileInput = document.getElementById('csv');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const calcBtn = document.getElementById('calcBtn');
+    const limitEl = document.getElementById('limit');
+    const kpiRoutes = document.getElementById('kpiRoutes');
+    const kpiKm = document.getElementById('kpiKm');
+    const kpiLayers = document.getElementById('kpiLayers');
+
+    const map = L.map('map').setView([-1.83, -78.18], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18}).addTo(map);
+    let drawnLayer = null;
+
+    function set(msg){ statusEl.textContent = msg; }
+    function log(msg){ statusEl.textContent = (statusEl.textContent + "\n" + msg).trim(); statusEl.scrollTop = statusEl.scrollHeight; }
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!fileInput.files || !fileInput.files[0]) { set('Selecciona un archivo CSV.'); return; }
+      set('Subiendo CSV ...');
+      const fd = new FormData(); fd.append('file', fileInput.files[0]);
+      try {
+        const resp = await fetch(`${API_BASE}/api/upload-csv`, { method:'POST', body: fd });
+        const data = await resp.json();
+        if (!resp.ok || data.status !== 'ok') { set('Error al subir CSV: ' + (data.error || (data.errors && data.errors.join('; ')) || 'Desconocido')); return; }
+        set('CSV cargado. Filas: ' + data.rows);
+      } catch(e){ set('Fallo la carga: ' + e.message); }
+    });
+
+    calcBtn.addEventListener('click', async () => {
+      set('Calculando rutas ...');
+      const limitVal = parseInt(limitEl.value || '0', 10);
+      const payload = {}; if (limitVal > 0) payload.limit = limitVal;
+      try {
+        const resp = await fetch(`${API_BASE}/api/calculate-routes`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const data = await resp.json();
+        if (!resp.ok || data.status !== 'ok') { set('Error en cálculo: ' + (data.error || 'Desconocido')); return; }
+        const { summary, geojson } = data;
+        kpiRoutes.textContent = summary.total_routes || 0;
+        kpiKm.textContent = (summary.total_km || 0).toFixed(3);
+        if (drawnLayer) { map.removeLayer(drawnLayer); drawnLayer = null; }
+        drawnLayer = L.geoJSON(geojson, { style: { color:'#000000', weight:2, opacity:0.9 } }).addTo(map);
+        kpiLayers.textContent = map._layers ? Object.keys(map._layers).length : 0;
+        try { const b = drawnLayer.getBounds(); if (b && b.isValid()) map.fitBounds(b, { padding:[20,20] }); } catch(_){}
+        set('Rutas dibujadas correctamente.');
+      } catch(e){ set('Fallo el cálculo: ' + e.message); }
+    });
+  </script>
+</body>
+</html>

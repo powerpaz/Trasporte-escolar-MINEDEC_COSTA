@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MINEDU - Sistema de Rutas de Transporte Escolar</title>
+    <title>Gestión de Rutas de Transporte Escolar</title>
     
-    <!-- Leaflet CSS para mapas -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <!-- Leaflet Control Geocoder -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-control-geocoder/2.4.0/Control.Geocoder.min.css" />
+    <!-- Leaflet Draw CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.min.css" />
     
-    <!-- Leaflet Routing Machine CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     
     <style>
         * {
@@ -17,332 +21,924 @@
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
         }
-
+        
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 350px;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 1000;
         }
-
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
-            text-align: center;
+            padding: 20px;
+            border-bottom: 3px solid #764ba2;
         }
-
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
+        
+        .sidebar-header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        .header p {
-            font-size: 1.1em;
+        
+        .sidebar-header p {
+            font-size: 12px;
             opacity: 0.9;
         }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 400px 1fr;
-            gap: 0;
-            height: calc(100vh - 200px);
-        }
-
-        .sidebar {
-            background: #f8f9fa;
-            padding: 25px;
-            overflow-y: auto;
-            border-right: 2px solid #e0e0e0;
-        }
-
-        .section {
-            background: white;
+        
+        .sidebar-content {
             padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex: 1;
         }
-
-        .section h3 {
-            color: #1e3c72;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-transform: uppercase;
             border-bottom: 2px solid #667eea;
             padding-bottom: 8px;
         }
-
-        .file-upload {
+        
+        .upload-area {
             border: 2px dashed #667eea;
+            border-radius: 8px;
             padding: 20px;
             text-align: center;
-            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
         }
-
-        .file-upload:hover {
-            background: #f0f4ff;
-            border-color: #1e3c72;
+        
+        .upload-area:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
         }
-
-        .file-upload input {
+        
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .upload-text {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        #csvFile {
             display: none;
         }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: all 0.3s;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .select-field {
+        
+        .button {
             width: 100%;
             padding: 10px;
             margin: 8px 0;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        #map {
-            height: 100%;
-            background: #e9ecef;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-box .label {
-            font-size: 0.85em;
-            opacity: 0.9;
-            margin-bottom: 5px;
-        }
-
-        .stat-box .value {
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-
-        .route-info {
-            background: #e8f4f8;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #2a5298;
-        }
-
-        .route-info h4 {
-            color: #1e3c72;
-            margin-bottom: 10px;
-        }
-
-        .route-info p {
-            margin: 5px 0;
-            color: #555;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading.active {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .data-preview {
-            max-height: 200px;
-            overflow-y: auto;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-
-        .regime-selector {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .regime-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 8px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-
-        .regime-btn.active {
+        
+        .btn-primary {
             background: #667eea;
             color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+        }
+        
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        
+        .stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .stat-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .routes-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .route-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .route-item:hover {
+            background: #eef0ff;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+        }
+        
+        .route-item-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        
+        .route-item-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: #666;
+        }
+        
+        .info-badge {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        /* Map container */
+        #map {
+            flex: 1;
+            position: relative;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .map-control-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #667eea;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .map-control-btn:hover {
+            background: #f8f9fa;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* Loading spinner */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading.show {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #fff;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2001;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            border-left: 4px solid #48bb78;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #f56565;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #4299e1;
+        }
+        
+        .toast-icon {
+            font-size: 20px;
+        }
+        
+        .toast.success .toast-icon { color: #48bb78; }
+        .toast.error .toast-icon { color: #f56565; }
+        .toast.info .toast-icon { color: #4299e1; }
+        
+        .toast-message {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2002;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .route-detail-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .route-detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+            }
+            
+            #map {
+                height: 60vh;
+            }
+        }
+        
+        /* Scrollbar styling */
+        .routes-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .routes-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .routes-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        
+        .routes-list::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚌 Sistema de Rutas de Transporte Escolar</h1>
-            <p>MINEDU - Modelamiento de Transporte Terrestre y Fluvial</p>
-        </div>
-
-        <div class="main-content">
-            <div class="sidebar">
-                <!-- Sección de Régimen -->
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-bus"></i> Rutas Escolar</h1>
+                <p>Gestión de transporte y mapeo de rutas</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Sección de carga -->
                 <div class="section">
-                    <h3>📚 Régimen Educativo</h3>
-                    <div class="regime-selector">
-                        <button class="regime-btn active" data-regime="sierra">Sierra</button>
-                        <button class="regime-btn" data-regime="costa">Costa</button>
-                        <button class="regime-btn" data-regime="selva">Selva</button>
+                    <div class="section-title">📁 Cargar Datos</div>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text">Arrastra tu CSV aquí<br>o haz clic para seleccionar</div>
                     </div>
+                    <input type="file" id="csvFile" accept=".csv">
                 </div>
-
-                <!-- Sección de carga de datos -->
+                
+                <!-- Estadísticas -->
                 <div class="section">
-                    <h3>📂 Cargar Base de Datos</h3>
-                    <div class="file-upload" id="fileUploadArea">
-                        <p style="margin-bottom: 10px;">📊 Arrastra aquí tu archivo Excel</p>
-                        <p style="font-size: 0.9em; color: #666;">o haz clic para seleccionar</p>
-                        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
-                    </div>
-                    <div id="fileInfo" class="data-preview" style="display: none;"></div>
-                </div>
-
-                <!-- Sección de selección de rutas -->
-                <div class="section">
-                    <h3>🗺️ Configurar Ruta</h3>
-                    <label for="unidadEje">Unidad EJE (Origen):</label>
-                    <select id="unidadEje" class="select-field">
-                        <option value="">Seleccionar unidad EJE...</option>
-                    </select>
-
-                    <label for="unidadAbsorbida">Unidad Absorbida (Destino):</label>
-                    <select id="unidadAbsorbida" class="select-field">
-                        <option value="">Seleccionar unidad absorbida...</option>
-                    </select>
-
-                    <label for="transportType">Tipo de Transporte:</label>
-                    <select id="transportType" class="select-field">
-                        <option value="car">🚗 Terrestre (Carretera)</option>
-                        <option value="foot">🚶 A pie</option>
-                        <option value="boat">⛵ Fluvial</option>
-                    </select>
-
-                    <button class="btn" id="calculateRoute" disabled>Calcular Ruta</button>
-                </div>
-
-                <!-- Sección de resultados -->
-                <div class="section" id="resultsSection" style="display: none;">
-                    <h3>📊 Resultados</h3>
+                    <div class="section-title">📊 Estadísticas</div>
                     <div class="stats">
-                        <div class="stat-box">
-                            <div class="label">Distancia</div>
-                            <div class="value" id="distanceValue">-</div>
+                        <div class="stat-item">
+                            <span class="stat-label">Rutas cargadas:</span>
+                            <span class="stat-value" id="routesCount">0</span>
                         </div>
-                        <div class="stat-box">
-                            <div class="label">Tiempo</div>
-                            <div class="value" id="timeValue">-</div>
+                        <div class="stat-item">
+                            <span class="stat-label">Distancia total:</span>
+                            <span class="stat-value" id="totalDistance">0 km</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Tiempo promedio:</span>
+                            <span class="stat-value" id="avgTime">0 min</span>
                         </div>
                     </div>
-                    <div class="route-info" id="routeDetails"></div>
-                    <button class="btn" id="exportRoute">Exportar Ruta</button>
                 </div>
-
-                <!-- Loading -->
-                <div class="loading" id="loadingIndicator">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 10px;">Calculando ruta...</p>
+                
+                <!-- Controles -->
+                <div class="section">
+                    <div class="section-title">🎮 Controles</div>
+                    <button class="button btn-primary" id="calculateBtn" disabled>
+                        <i class="fas fa-calculator"></i> Calcular Rutas
+                    </button>
+                    <button class="button btn-success" id="exportGeoJson" disabled>
+                        <i class="fas fa-download"></i> Exportar GeoJSON
+                    </button>
+                    <button class="button btn-success" id="exportCsv" disabled>
+                        <i class="fas fa-table"></i> Exportar CSV
+                    </button>
+                    <button class="button btn-secondary" id="screenshotBtn" disabled>
+                        <i class="fas fa-camera"></i> Capturar Mapa
+                    </button>
+                </div>
+                
+                <!-- Lista de rutas -->
+                <div class="section">
+                    <div class="section-title">🗺️ Rutas Calculadas</div>
+                    <div class="routes-list" id="routesList">
+                        <p style="color: #999; text-align: center; padding: 20px;">
+                            <i class="fas fa-info-circle"></i> Carga un CSV para ver rutas
+                        </p>
+                    </div>
                 </div>
             </div>
-
-            <div id="map"></div>
+        </div>
+        
+        <!-- Mapa -->
+        <div id="map"></div>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Modal de detalles -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Detalles de Ruta</h2>
+                <span class="close-modal" onclick="closeDetailModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
         </div>
     </div>
-
+    
     <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-draw/1.0.4/leaflet.draw.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        // Variables globales
+        let map;
+        let routesGeoJSON;
+        let routeLayers = [];
+        let currentRoutes = [];
+        
+        // Inicializar mapa
+        function initMap() {
+            map = L.map('map').setView([0, 0], 2);
+            
+            // Layer de OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Mapbox Satellite (opcional, requiere token)
+            const mapboxToken = '{{ mapbox_token }}';
+            if (mapboxToken && mapboxToken !== '') {
+                L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/{bbox}/600x400@2x?access_token=${mapboxToken}`, {
+                    maxZoom: 19
+                });
+            }
+        }
+        
+        // Mostrar notificación
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">
+                    ${type === 'success' ? '<i class="fas fa-check-circle"></i>' : 
+                      type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : 
+                      '<i class="fas fa-info-circle"></i>'}
+                </span>
+                <span class="toast-message">${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // Mostrar loading
+        function showLoading(show = true) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+        
+        // Upload CSV
+        const uploadArea = document.getElementById('uploadArea');
+        const csvFile = document.getElementById('csvFile');
+        
+        uploadArea.addEventListener('click', () => csvFile.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+        
+        csvFile.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+        
+        function handleFileSelect(file) {
+            if (!file || !file.name.endsWith('.csv')) {
+                showToast('Por favor selecciona un archivo CSV válido', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/api/upload-csv', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                showLoading(false);
+                
+                if (data.error) {
+                    showToast(data.error, 'error');
+                } else {
+                    showToast(`✓ ${data.rows} rutas cargadas`, 'success');
+                    document.getElementById('calculateBtn').disabled = false;
+                }
+            })
+            .catch(err => {
+                showLoading(false);
+                showToast('Error al cargar archivo', 'error');
+                console.error(err);
+            });
+        }
+        
+        // Calcular rutas
+        document.getElementById('calculateBtn').addEventListener('click', () => {
+            showLoading(true);
+            
+            fetch('/api/calculate-routes', {
+                method: 'POST'
+            })
+            .then(r => r.json())
+            .then(data => {
+                showLoading(false);
+                
+                if (data.error) {
+                    showToast(data.error, 'error');
+                } else {
+                    currentRoutes = data.rutas;
+                    displayRoutes(data.rutas);
+                    updateStats(data.rutas);
+                    showToast(`✓ ${data.total_rutas} rutas calculadas`, 'success');
+                    
+                    document.getElementById('exportGeoJson').disabled = false;
+                    document.getElementById('exportCsv').disabled = false;
+                    document.getElementById('screenshotBtn').disabled = false;
+                }
+            })
+            .catch(err => {
+                showLoading(false);
+                showToast('Error al calcular rutas', 'error');
+                console.error(err);
+            });
+        });
+        
+        // Mostrar rutas en el mapa
+        function displayRoutes(routes) {
+            // Limpiar capas anteriores
+            routeLayers.forEach(layer => map.removeLayer(layer));
+            routeLayers = [];
+            
+            if (routes.length === 0) return;
+            
+            const bounds = L.latLngBounds();
+            const colors = ['#667eea', '#764ba2', '#f56565', '#48bb78', '#ed8936'];
+            
+            routes.forEach((route, index) => {
+                const color = colors[index % colors.length];
+                
+                // Dibujar línea
+                const polyline = L.polyline(
+                    route.geometry.coordinates.map(coord => [coord[1], coord[0]]),
+                    {
+                        color: color,
+                        weight: 3,
+                        opacity: 0.7,
+                        className: `route-${route.id}`
+                    }
+                );
+                
+                polyline.bindPopup(`
+                    <b>${route.origen.nombre} → ${route.destino.nombre}</b><br>
+                    Distancia: ${route.distancia_km} km<br>
+                    Tiempo: ${route.tiempo_minutos} min
+                `);
+                
+                polyline.addTo(map);
+                routeLayers.push(polyline);
+                
+                // Marcador origen
+                const originMarker = L.circleMarker([route.origen.latitud, route.origen.longitud], {
+                    radius: 8,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+                
+                originMarker.bindPopup(`<b>Origen</b><br>${route.origen.nombre}`);
+                routeLayers.push(originMarker);
+                
+                // Marcador destino
+                const destMarker = L.circleMarker([route.destino.latitud, route.destino.longitud], {
+                    radius: 8,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.6
+                }).addTo(map);
+                
+                destMarker.bindPopup(`<b>Destino</b><br>${route.destino.nombre}`);
+                routeLayers.push(destMarker);
+                
+                bounds.extend([route.origen.latitud, route.origen.longitud]);
+                bounds.extend([route.destino.latitud, route.destino.longitud]);
+            });
+            
+            // Ajustar vista
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+        
+        // Actualizar lista de rutas
+        function displayRoutes(routes) {
+            const list = document.getElementById('routesList');
+            
+            if (routes.length === 0) {
+                list.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Sin rutas</p>';
+                return;
+            }
+            
+            list.innerHTML = routes.map((route, idx) => `
+                <div class="route-item" onclick="showRouteDetail(${idx})">
+                    <div class="route-item-title">${route.id + 1}. ${route.origen.nombre}</div>
+                    <div class="route-item-info">
+                        <span><i class="fas fa-arrow-right"></i> ${route.destino.nombre}</span>
+                    </div>
+                    <div class="route-item-info" style="margin-top: 6px;">
+                        <span class="info-badge"><i class="fas fa-ruler"></i> ${route.distancia_km} km</span>
+                        <span class="info-badge"><i class="fas fa-clock"></i> ${route.tiempo_minutos} min</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Dibujar rutas en mapa
+            drawRoutes(routes);
+        }
+        
+        function drawRoutes(routes) {
+            routeLayers.forEach(layer => map.removeLayer(layer));
+            routeLayers = [];
+            
+            const bounds = L.latLngBounds();
+            const colors = ['#667eea', '#764ba2', '#f56565', '#48bb78', '#ed8936'];
+            
+            routes.forEach((route, index) => {
+                const color = colors[index % colors.length];
+                
+                const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                const line = L.polyline(coords, { color, weight: 3, opacity: 0.7 }).addTo(map);
+                routeLayers.push(line);
+                
+                const originMarker = L.circleMarker([route.origen.latitud, route.origen.longitud], {
+                    radius: 8, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.8
+                }).addTo(map);
+                originMarker.bindPopup(`<b>Origen</b><br>${route.origen.nombre}`);
+                routeLayers.push(originMarker);
+                
+                const destMarker = L.circleMarker([route.destino.latitud, route.destino.longitud], {
+                    radius: 8, fillColor: color, color: '#fff', weight: 2, opacity: 1, fillOpacity: 0.6
+                }).addTo(map);
+                destMarker.bindPopup(`<b>Destino</b><br>${route.destino.nombre}`);
+                routeLayers.push(destMarker);
+                
+                bounds.extend([route.origen.latitud, route.origen.longitud]);
+                bounds.extend([route.destino.latitud, route.destino.longitud]);
+            });
+            
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [50, 50] });
+        }
+        
+        // Mostrar detalles de ruta
+        function showRouteDetail(index) {
+            const route = currentRoutes[index];
+            const html = `
+                <div class="route-detail-item">
+                    <div class="detail-label">Ruta #${route.id + 1}</div>
+                </div>
+                <div class="route-detail-item">
+                    <div class="detail-label">📍 Origen</div>
+                    <div class="detail-value">${route.origen.nombre}</div>
+                    <div class="detail-value">Lat: ${route.origen.latitud.toFixed(6)}, Lon: ${route.origen.longitud.toFixed(6)}</div>
+                </div>
+                <div class="route-detail-item">
+                    <div class="detail-label">🎯 Destino</div>
+                    <div class="detail-value">${route.destino.nombre}</div>
+                    <div class="detail-value">Lat: ${route.destino.latitud.toFixed(6)}, Lon: ${route.destino.longitud.toFixed(6)}</div>
+                </div>
+                <div class="route-detail-item">
+                    <div class="detail-label">📏 Distancia</div>
+                    <div class="detail-value">${route.distancia_km} km</div>
+                </div>
+                <div class="route-detail-item">
+                    <div class="detail-label">⏱️ Tiempo Estimado</div>
+                    <div class="detail-value">${route.tiempo_minutos} minutos</div>
+                </div>
+                <div class="route-detail-item">
+                    <div class="detail-label">♿ Accesibilidad</div>
+                    <div class="detail-value">${route.accesibilidad}</div>
+                </div>
+            `;
+            
+            document.getElementById('detailBody').innerHTML = html;
+            document.getElementById('detailModal').classList.add('show');
+        }
+        
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+        
+        // Actualizar estadísticas
+        function updateStats(routes) {
+            const count = routes.length;
+            const totalDist = routes.reduce((sum, r) => sum + r.distancia_km, 0);
+            const avgTime = routes.length > 0 ? (routes.reduce((sum, r) => sum + r.tiempo_minutos, 0) / count).toFixed(1) : 0;
+            
+            document.getElementById('routesCount').textContent = count;
+            document.getElementById('totalDistance').textContent = totalDist.toFixed(2) + ' km';
+            document.getElementById('avgTime').textContent = avgTime + ' min';
+        }
+        
+        // Exportar GeoJSON
+        document.getElementById('exportGeoJson').addEventListener('click', () => {
+            fetch('/api/export-geojson')
+                .then(r => r.json())
+                .then(data => {
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `rutas_${new Date().getTime()}.geojson`;
+                    link.click();
+                    showToast('✓ GeoJSON exportado', 'success');
+                });
+        });
+        
+        // Exportar CSV
+        document.getElementById('exportCsv').addEventListener('click', () => {
+            window.location.href = '/api/export-csv';
+            showToast('✓ CSV exportado', 'success');
+        });
+        
+        // Capturar mapa
+        document.getElementById('screenshotBtn').addEventListener('click', () => {
+            showLoading(true);
+            
+            html2canvas(document.getElementById('map'), {
+                backgroundColor: '#fff',
+                logging: false
+            }).then(canvas => {
+                showLoading(false);
+                
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `mapa_rutas_${new Date().getTime()}.png`;
+                link.click();
+                
+                showToast('✓ Mapa capturado', 'success');
+            }).catch(err => {
+                showLoading(false);
+                showToast('Error al capturar mapa', 'error');
+                console.error(err);
+            });
+        });
+        
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDetailModal();
+        });
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
 </body>
 </html>

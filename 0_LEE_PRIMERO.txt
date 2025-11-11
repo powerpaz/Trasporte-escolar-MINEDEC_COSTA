@@ -1,0 +1,239 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║     🚌 SISTEMA DE GESTIÓN DE RUTAS DE TRANSPORTE ESCOLAR - v1.0.0          ║
+║                                                                              ║
+║     Solución completa para convertir Excel → Mapa interactivo + Estadísticas║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+👋 HOLA! BIENVENIDO/A
+
+Este paquete contiene TODO lo que necesitas para:
+✅ Convertir archivos Excel a CSV (preservando caracteres especiales)
+✅ Calcular automáticamente distancias y tiempos de rutas
+✅ Ver rutas en un mapa interactivo
+✅ Exportar datos en múltiples formatos (GeoJSON, CSV, PNG)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 ¿QUÉ ARCHIVOS INCLUYE?
+
+  Documentación (Lee en este orden):
+  ├── 📄 INDEX.md ...................... Mapa de navegación completo
+  ├── 📄 INICIO_RAPIDO.md ............ ⭐ EMPIEZA AQUÍ (5 minutos)
+  ├── 📄 README.md ................... Referencia completa
+  ├── 📄 DEPLOYMENT.md ............... Para llevarlo a producción
+  ├── 📄 MEJORAS.md .................. Futuras características
+  └── 📄 MANIFEST.md ................. Especificaciones técnicas
+
+  Código Listo para Usar:
+  ├── 🐍 app.py ...................... Backend Flask (servidor)
+  ├── 🐍 convert_excel_to_csv.py ... Conversor de Excel
+  ├── 🌐 templates/index.html ....... Interfaz web interactiva
+  ├── 📝 requirements.txt ............ Dependencias a instalar
+  └── 📊 ejemplo_rutas.csv .......... Datos de prueba
+
+  Scripts de Automatización:
+  ├── 🚀 start.sh ................... Para Linux/Mac (automático)
+  └── 🚀 start.bat .................. Para Windows (automático)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 COMIENZA EN 3 PASOS (15 minutos)
+
+PASO 1: Lee la Guía Rápida
+   → Abre el archivo: INICIO_RAPIDO.md
+   → Tiempo: 5 minutos
+
+PASO 2: Ejecuta el Script
+   
+   EN LINUX/MAC:
+   $ bash start.sh
+   
+   EN WINDOWS:
+   → Haz doble clic en start.bat
+   
+   El script instalará todo automáticamente.
+
+PASO 3: Abre en tu Navegador
+   → Ve a: http://localhost:5000
+   → Carga: ejemplo_rutas.csv
+   → ¡Verás tu primer mapa!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ CARACTERÍSTICAS PRINCIPALES
+
+✅ Conversión de Excel a CSV (sin perder caracteres especiales)
+✅ Cálculo automático de distancias (fórmula Haversine + Mapbox)
+✅ Estimación de tiempos de viaje
+✅ Mapa interactivo con Leaflet + OpenStreetMap
+✅ Marcadores coloreados para origen/destino
+✅ Exportación:
+   • GeoJSON (para QGIS, ArcGIS)
+   • CSV (para análisis en Excel)
+   • PNG (captura de pantalla del mapa)
+✅ Interfaz responsiva (funciona en desktop, tablet, móvil)
+✅ Estadísticas en tiempo real
+✅ Soporte para accesibilidad
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 REQUISITOS PREVIOS
+
+Antes de empezar, verifica que tengas:
+✓ Python 3.8 o superior instalado
+✓ Un navegador moderno (Chrome, Firefox, Safari, Edge)
+✓ Conexión a internet
+
+¿No tienes Python?
+→ Descargalo de: https://www.python.org/downloads/
+
+¿No sabes si está instalado?
+Abre terminal/CMD y escribe:
+   python3 --version
+
+Debería mostrar algo como: Python 3.11.0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ESTRUCTURA DE DATOS ESPERADA
+
+Tu archivo CSV debe tener estas columnas (MÍNIMO):
+
+   Longitud_A, Latitud_A, Longitud_B, Latitud_B
+
+Ejemplo de datos correctos:
+   -78.5054, -0.2192, -78.5167, -0.2189
+   -78.5100, -0.2300, -78.5000, -0.2100
+
+Para Ecuador:
+   • Longitudes: Negativas (oeste)
+   • Latitudes: Alrededor de -0.2 a -5.0 (sur del ecuador)
+
+✅ El archivo ejemplo_rutas.csv contiene datos correctos para probar
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 CONSEJOS IMPORTANTES
+
+1. Lee primero INICIO_RAPIDO.md (no te saltees este paso)
+
+2. En la primera ejecución, el script tardará 2-3 minutos instalando
+
+3. Si algo falla, reinicia el script - usualmente funciona a la segunda
+
+4. Usa ejemplo_rutas.csv como primera prueba
+
+5. Solo después de que funcione, carga tus datos reales
+
+6. Si necesitas Mapbox para rutas precisas:
+   → Ve a: https://account.mapbox.com/auth/signup/
+   → Crea cuenta gratuita
+   → Copia el token en el archivo .env
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❓ PREGUNTAS FRECUENTES
+
+P: ¿Necesito ser programador?
+R: No, todo está automatizado. Solo haz clic en el script.
+
+P: ¿Cuánto cuesta?
+R: Es completamente gratuito y de código abierto.
+
+P: ¿Funciona en Mac/Linux/Windows?
+R: Sí, en todos. Tenemos scripts para cada uno.
+
+P: ¿Puedo usar mis propios datos?
+R: Claro, tu CSV debe tener las columnas adecuadas.
+
+P: ¿Qué pasa con los caracteres especiales (ñ, á, é)?
+R: Se preservan perfectamente en el CSV.
+
+P: ¿Puedo desplegar en producción?
+R: Sí, consulta el archivo DEPLOYMENT.md
+
+P: ¿Puedo agregar más características?
+R: Claro, consulta el archivo MEJORAS.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PRÓXIMOS PASOS
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  1. AHORA: Lee INICIO_RAPIDO.md (5 min)                                │
+│  2. LUEGO: Ejecuta start.sh o start.bat                                 │
+│  3. ESPERA: A que termine la instalación (1-2 min)                      │
+│  4. ABRE: http://localhost:5000 en tu navegador                         │
+│  5. CARGA: ejemplo_rutas.csv                                             │
+│  6. CALCULA: Haz clic en "Calcular Rutas"                               │
+│  7. EXPLORA: Tu mapa de rutas                                            │
+│  8. EXPORTA: Los datos en el formato que necesites                       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 ¿PROBLEMAS?
+
+Si algo no funciona:
+
+1. Verifica que tengas Python 3.8+ instalado
+2. Lee la sección "Problemas Comunes" en INICIO_RAPIDO.md
+3. Intenta de nuevo - usualmente funciona a la segunda vez
+4. Si persiste, revisa README.md sección "Troubleshooting"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 ARCHIVOS IMPORTANTES
+
+Después de INICIO_RAPIDO.md, estos archivos son muy útiles:
+
+├── INDEX.md
+│   ├─ Mapa completo de la documentación
+│   └─ Guía por rol (usuario, developer, admin, etc.)
+│
+├── README.md
+│   ├─ Guía completa
+│   ├─ Todas las características
+│   └─ Referencia técnica
+│
+├── DEPLOYMENT.md (si vas a producción)
+│   ├─ Heroku, AWS, Docker
+│   ├─ Seguridad
+│   └─ Optimización
+│
+└── MEJORAS.md (si quieres agregar features)
+    ├─ Base de datos
+    ├─ Autenticación
+    └─ Análisis estadístico
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ INFORMACIÓN DEL PROYECTO
+
+Versión: 1.0.0
+Estado: ✅ Completamente funcional y listo para usar
+Creado para: MINEDEC - Costa (Transporte Escolar)
+Tecnología: Python + Flask + Leaflet + Mapbox
+
+Disponible bajo licencia abierta para:
+✅ Uso educativo
+✅ Uso comercial
+✅ Modificaciones
+✅ Distribución
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 ¡ESTÁS LISTO PARA COMENZAR!
+
+Próximo paso: Abre el archivo INICIO_RAPIDO.md
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                     ¡Bienvenido/a a Rutas Escolar! 🚌                       ║
+║                                                                              ║
+║                  Haz clic en INICIO_RAPIDO.md para empezar                  ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+

@@ -1,0 +1,87 @@
+📥 GUÍA DE DESCARGA - SISTEMA DE RUTAS ESCOLAR
+
+════════════════════════════════════════════════════════════════════
+
+✅ OPCIÓN 1: DESCARGAR TODO EN UN ZIP (RECOMENDADO)
+
+Archivo: Sistema-Rutas-Escolar-v1.0.0.zip (38 KB)
+
+Pasos:
+1. Haz clic en el ZIP
+2. Se descargará automáticamente
+3. Descomprime en tu carpeta
+4. Abre "0_LEE_PRIMERO.txt"
+5. Ejecuta start.sh o start.bat
+
+════════════════════════════════════════════════════════════════════
+
+✅ OPCIÓN 2: DESCARGAR ARCHIVO POR ARCHIVO
+
+Lee estos PRIMERO:
+  📄 0_LEE_PRIMERO.txt ........... Instrucciones iniciales
+  📄 INICIO_RAPIDO.md ........... Guía 15 minutos
+  📄 README.md .................. Referencia completa
+
+Luego descarga el código:
+  🐍 app.py ..................... Servidor Flask
+  🐍 convert_excel_to_csv.py ... Conversor
+  🌐 templates/index.html ....... Interfaz web
+  📝 requirements.txt ........... Dependencias
+  📊 ejemplo_rutas.csv .......... Datos prueba
+
+Y los scripts:
+  🚀 start.sh ................... Linux/Mac
+  🚀 start.bat .................. Windows
+
+Documentación (opcional):
+  📚 INDEX.md ................... Índice completo
+  📚 DEPLOYMENT.md .............. Para producción
+  📚 MEJORAS.md ................. Futuras features
+  📚 MANIFEST.md ................ Especificaciones
+
+════════════════════════════════════════════════════════════════════
+
+⚠️ SI TIENES PROBLEMAS AL DESCARGAR:
+
+Problema: "Archivo no encontrado"
+Solución: Prueba descargar el ZIP primero
+
+Problema: "No puedo descargar archivos individuales"
+Solución: Descarga el ZIP completo
+
+Problema: "El navegador no deja descargar"
+Solución: Clic derecho → Guardar como...
+
+════════════════════════════════════════════════════════════════════
+
+📁 ESTRUCTURA DESPUÉS DE DESCOMPRIMIR
+
+Sistema-Rutas-Escolar/
+├── 0_LEE_PRIMERO.txt
+├── INICIO_RAPIDO.md
+├── README.md
+├── app.py
+├── convert_excel_to_csv.py
+├── ejemplo_rutas.csv
+├── requirements.txt
+├── start.sh
+├── start.bat
+├── templates/
+│   └── index.html
+├── DEPLOYMENT.md
+├── MEJORAS.md
+├── MANIFEST.md
+└── INDEX.md
+
+════════════════════════════════════════════════════════════════════
+
+🚀 SIGUIENTES PASOS
+
+1. Descarga el ZIP
+2. Descomprime
+3. Abre "0_LEE_PRIMERO.txt"
+4. Lee "INICIO_RAPIDO.md"
+5. Ejecuta start.sh o start.bat
+6. ¡Listo en 15 minutos!
+
+════════════════════════════════════════════════════════════════════
